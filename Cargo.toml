@@ -1,0 +1,15 @@
+[package]
+name = "rogos4"
+version = "0.1.0"
+edition = "2021"
+description = "Standalone pure-Rust Logos4/LRES01 parser, decoder, and exporter"
+
+[dependencies]
+lzma-rs = "0.3"
+
+[profile.release]
+codegen-units = 1
+lto = true
+debug = 0
+strip = "symbols"
+split-debuginfo = "off"

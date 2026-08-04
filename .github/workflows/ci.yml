@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    name: Format, test, lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run tests
+        run: cargo test --all-targets
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets -- -D warnings
+
+  windows-build:
+    name: Windows release build
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release binary
+        run: cargo build --release
+
+      - name: Verify release output
+        shell: pwsh
+        run: |
+          $pdb = Get-ChildItem -Path target/release -Filter *.pdb -File -ErrorAction SilentlyContinue
+          if ($pdb) {
+            throw "Release output contains PDB files: $($pdb.Name -join ', ')"
+          }
+
+      - name: Upload Windows binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: rogos4-windows
+          path: target/release/rogos4.exe
